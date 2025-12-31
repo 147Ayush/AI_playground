@@ -110,3 +110,5 @@ st.success("Model trained successfully!")
 # -------------------- Footer --------------------
 st.markdown("---")
 st.markdown("🚀 Built for learning & experimentation | Classic Machine Learning")
+
+print("Streamlit ML Playground is running.")
