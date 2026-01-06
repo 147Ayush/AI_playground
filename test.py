@@ -1,8 +1,10 @@
-# ML Test Code: Train & Evaluate a Simple Classifier
+# ML Test Code: Train & Evaluate a Simple Classifier (Industry-Style)
+
 from sklearn.datasets import load_iris
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import Pipeline
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 
 # 1. Load dataset
@@ -15,21 +17,38 @@ X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42, stratify=y
 )
 
-# 3. Feature scaling
-scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
-X_test = scaler.transform(X_test)
+# 3. Build Pipeline
+pipeline = Pipeline([
+    ("scaler", StandardScaler()),
+    ("model", LogisticRegression(max_iter=300))
+])
 
-# 4. Model initialization
-model = LogisticRegression(max_iter=200)
+# 4. Cross-validation
+cv_scores = cross_val_score(pipeline, X_train, y_train, cv=5)
+print("Cross-validation Accuracy:", cv_scores.mean())
 
-# 5. Train model
-model.fit(X_train, y_train)
+# 5. Hyperparameter tuning
+param_grid = {
+    "model__C": [0.01, 0.1, 1, 10],
+    "model__solver": ["lbfgs", "liblinear"]
+}
 
-# 6. Predictions
-y_pred = model.predict(X_test)
+grid = GridSearchCV(
+    pipeline,
+    param_grid,
+    cv=5,
+    scoring="accuracy"
+)
 
-# 7. Evaluation
-print("Accuracy:", accuracy_score(y_test, y_pred))
+# 6. Train model
+grid.fit(X_train, y_train)
+
+print("Best Parameters:", grid.best_params_)
+
+# 7. Predictions
+y_pred = grid.predict(X_test)
+
+# 8. Evaluation
+print("\nTest Accuracy:", accuracy_score(y_test, y_pred))
 print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred))
 print("\nClassification Report:\n", classification_report(y_test, y_pred))
